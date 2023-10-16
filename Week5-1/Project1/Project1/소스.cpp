@@ -8,14 +8,27 @@
 
 POINT startPoint = { 0 };
 POINT endPoint = { 0 };
+
+POINT beforeStartPoint = { 0 };
+POINT beforeEndPoint = { 0 };
+
+POINT rStartPoint = { 0 };
+POINT rEndPoint = { 0 };
+
+RECT rect;
+RECT rectSave;
+
+HBRUSH hBrush = CreateSolidBrush(RGB(255, 0, 255)); // 핑크 브러시 생성
+HBRUSH hBrush_eraser = CreateSolidBrush(RGB(255, 255, 255)); //흰색 브러시 생성
+
 int isMouseLButtonPressed = 0;
+int isMouseRButtonPressed = 0;
 
 // 윈도우의 이벤트를 처리하는 콜백(Callback) 함수.
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
-		RECT rect;
 	case WM_GETMINMAXINFO: //창 크기 고정
 	{
 		MINMAXINFO* lpMMI = (MINMAXINFO*)lParam;
@@ -28,114 +41,99 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_LBUTTONDOWN:
 	{
-		///** 사각형 그리기
-		//*/
-		//HDC hdc = GetDC(hwnd);
-		//RECT rect = { 50, 50, 150, 150 }; // 왼쪽 상단 좌표 (50, 50)에서 오른쪽 하단 좌표 (150, 150)까지의 사각형
-		//HBRUSH hBrush = CreateSolidBrush(RGB(255, 0, 255)); // 핑크 브러시 생성
-
-		//if (hBrush == NULL)
-		//{
-		//	MessageBox(NULL, L"CreateSolidBrush failed!", L"Error", MB_ICONERROR);
-		//	exit(-1);	//예외
-		//}
-
-		//// 그리기
-		//FillRect(hdc, &rect, hBrush); // 사각형을 빨간색으로 채우기
-		//ReleaseDC(hwnd, hdc);
 		startPoint.x = LOWORD(lParam);
 		startPoint.y = HIWORD(lParam);
+
+		beforeStartPoint.x = LOWORD(lParam);
+		beforeStartPoint.y = HIWORD(lParam);
 		isMouseLButtonPressed = 1;
+	}
+	break;
+
+	case WM_LBUTTONUP:
+	{
+		endPoint.x = LOWORD(lParam);
+		endPoint.y = HIWORD(lParam);
+
+		beforeEndPoint.x = LOWORD(lParam);
+		beforeEndPoint.y = HIWORD(lParam);
+		isMouseLButtonPressed = 0;
+
+		// WM_PAINT 메시지를 유발하여 네모를 화면에 그립니다.
+		InvalidateRect(hwnd, NULL, TRUE);
 	}
 	break;
 
 	//강의에 안나왔지만 마우스가 움직일때의 이벤트를 뜻합니다.
 	case WM_MOUSEMOVE:
+	{
 
+		// 마우스 이동 중
+		if (isMouseLButtonPressed)
 		{
-			// 마우스 이동 중
-			if (isMouseLButtonPressed)
-			{
-				endPoint.x = LOWORD(lParam);
-				endPoint.y = HIWORD(lParam);
-			
-				// WM_PAINT 메시지를 유발하여 네모를 화면에 그립니다.
-				InvalidateRect(hwnd, NULL, TRUE);
-			}
-		}
-		break;
-
-	case WM_LBUTTONUP:
-		{
-			///** 사각형 그리기
-			//*/
-			//HDC hdc = GetDC(hwnd);
-			//RECT rect = { 50, 50, 150, 150 }; // 왼쪽 상단 좌표 (50, 50)에서 오른쪽 하단 좌표 (150, 150)까지의 사각형
-			//
-
-			//// 그리기
-			//FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW+1)); // 사각형을 빨간색으로 채우기
-			//ReleaseDC(hwnd, hdc);
 			endPoint.x = LOWORD(lParam);
 			endPoint.y = HIWORD(lParam);
-		
-			isMouseLButtonPressed = 0;
+
+			beforeEndPoint.x = LOWORD(lParam);
+			beforeEndPoint.y = HIWORD(lParam);
 
 			// WM_PAINT 메시지를 유발하여 네모를 화면에 그립니다.
 			InvalidateRect(hwnd, NULL, TRUE);
 		}
+		if (isMouseRButtonPressed) {
+			if (isMouseRButtonPressed && rStartPoint.y <= rect.bottom && rStartPoint.y >= rect.top && rStartPoint.x >= rect.left && rStartPoint.x <= rect.right) {
+				rEndPoint.x = LOWORD(lParam);
+				rEndPoint.y = HIWORD(lParam);
 
-		case WM_PAINT:
-		{
-			HDC hdc = GetDC(hwnd);
-			
+				rectSave.top = startPoint.y + (rEndPoint.y - rStartPoint.y);
+				rectSave.bottom = endPoint.y + (rEndPoint.y - rStartPoint.y);
 
-			if (isMouseLButtonPressed)
-			{
-				GetClientRect(hwnd, &rect);
-				FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 1));
+				rectSave.right = startPoint.x + (rEndPoint.x - rStartPoint.x);
+				rectSave.left = endPoint.x + (rEndPoint.x - rStartPoint.x);
 
-
-				MoveToEx(hdc, startPoint.x, startPoint.y, NULL);
-
-				rect = { startPoint.x, startPoint.y, endPoint.x, endPoint.y }; // 사각형 그리는데 시작지점과 끝점 (startPoint.x와 y, endPoint.x, y ) 기준으로 그리기
-				HBRUSH hBrush = CreateSolidBrush(RGB(255, 0, 255)); // 핑크 브러시 생성
-
-				//// 그리기
-				FillRect(hdc, &rect, hBrush);	
+				// WM_PAINT 메시지를 유발하여 네모를 화면에 그립니다.
+				InvalidateRect(hwnd, NULL, TRUE);
 			}
+		}
+	}
+	break;
 
+	case WM_RBUTTONDOWN:
+		isMouseRButtonPressed = 1;
 
-			ReleaseDC(hwnd, hdc);
+		rStartPoint.x = LOWORD(lParam);
+		rStartPoint.y = HIWORD(lParam);
+		beforeStartPoint = startPoint;
+		beforeEndPoint = endPoint;
 
-			/** 사각형 그리기
-			*/
-			//HDC hdc = GetDC(hwnd);
-			//RECT rect = { 50, 50, 150, 150 }; // 왼쪽 상단 좌표 (50, 50)에서 오른쪽 하단 좌표 (150, 150)까지의 사각형
-			//HBRUSH hBrush = CreateSolidBrush(RGB(255, 0, 255)); // 핑크 브러시 생성
+	break;
 
+	case WM_RBUTTONUP:
+		isMouseRButtonPressed = 0;
+	break;
+
+	case WM_PAINT:
+	{
+		HDC hdc = GetDC(hwnd);
+
+		if (isMouseLButtonPressed)
+		{
+			GetClientRect(hwnd, &rect);
+			FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 1));
+			rect = { startPoint.x, startPoint.y, endPoint.x, endPoint.y }; // 사각형 그리는데 시작지점과 끝점 (startPoint.x와 y, endPoint.x, y ) 기준으로 그리기
+				
 
 			//// 그리기
-			//FillRect(hdc, &rect, hBrush); // 사각형을 빨간색으로 채우기
-			//ReleaseDC(hwnd, hdc);
-
-
-			/** 타원 그리기
-			*/
-			//HDC hdc = GetDC(hwnd); // 디바이스 컨텍스트 얻기
-			//
-			//HBRUSH hBrush = CreateSolidBrush(RGB(255, 0, 255)); // 핑크 브러시 생성
-			//SelectObject(hdc, hBrush);
-
-			//// 타원 그리기
-			//Ellipse(hdc, 50, 50, 200, 150); // 왼쪽 상단 좌표 (50, 50)에서 오른쪽 하단 좌표 (200, 150)까지의 타원
-
-			//DeleteObject(hBrush);
-
-			//ReleaseDC(hwnd, hdc); // 디바이스 컨텍스트 해제
-
-
+			FillRect(hdc, &rect, hBrush);	
 		}
+
+		if (isMouseRButtonPressed) {
+			FillRect(hdc, &rectSave, hBrush);
+		}
+
+		ReleaseDC(hwnd, hdc);
+
+	}
 	break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
