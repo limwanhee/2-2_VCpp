@@ -33,12 +33,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			rect_user.right += 5;
 			InvalidateRect(hwnd, NULL, TRUE);
 		}
+		if (wParam == VK_LEFT)
+		{
+			rect_user.left -= 5;
+			rect_user.right -= 5;
+			InvalidateRect(hwnd, NULL, TRUE);
+		}
+		if (wParam == VK_DOWN)
+		{
+			rect_user.bottom += 5;
+			rect_user.top += 5;
+			InvalidateRect(hwnd, NULL, TRUE);
+		}
+		if (wParam == VK_UP)
+		{
+			rect_user.bottom -= 5;
+			rect_user.top -= 5;
+			InvalidateRect(hwnd, NULL, TRUE);
+		}
 		break;
 	case WM_KEYUP:
 		isKeyPressed = 0;
 		break;
 	case WM_PAINT:
 	{
+		if (rect_user.left >= rect_target.left && rect_user.top >= rect_target.top && rect_user.right <= rect_target.right && rect_user.bottom <= rect_target.bottom) {
+			TextOut(hdc, 10, 10, text, lstrlen(text));
+		}
 		if (isKeyPressed)
 		{
 			FillRect(hdc, &rect_user, hBrush_user);
@@ -46,8 +67,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		else
 		{
-			TextOut(hdc, 10, 10, text, lstrlen(text));
-			FillRect(hdc, &rect_user, hBrush_eraser);
 			FillRect(hdc, &rect_target, hBrush_target);
 		}
 
