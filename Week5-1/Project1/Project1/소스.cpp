@@ -9,6 +9,8 @@
 POINT startPoint = { 0 };
 POINT endPoint = { 0 };
 
+POINT moveDistance = { 0 };
+
 POINT beforeStartPoint = { 0 };
 POINT beforeEndPoint = { 0 };
 
@@ -32,10 +34,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_GETMINMAXINFO: //창 크기 고정
 	{
 		MINMAXINFO* lpMMI = (MINMAXINFO*)lParam;
-		lpMMI->ptMinTrackSize.x = 800; 
-		lpMMI->ptMinTrackSize.y = 600; 
-		lpMMI->ptMaxTrackSize.x = 800; 
-		lpMMI->ptMaxTrackSize.y = 600; 
+		lpMMI->ptMinTrackSize.x = 800;
+		lpMMI->ptMinTrackSize.y = 600;
+		lpMMI->ptMaxTrackSize.x = 800;
+		lpMMI->ptMaxTrackSize.y = 600;
 	}
 	break;
 
@@ -45,7 +47,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		startPoint.y = HIWORD(lParam);
 
 		beforeStartPoint.x = LOWORD(lParam);
-		beforeStartPoint.y = HIWORD(lParam);
+		beforeStartPoint.y = LOWORD(lParam);
+
 		isMouseLButtonPressed = 1;
 	}
 	break;
@@ -56,7 +59,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		endPoint.y = HIWORD(lParam);
 
 		beforeEndPoint.x = LOWORD(lParam);
-		beforeEndPoint.y = HIWORD(lParam);
+		beforeEndPoint.y = LOWORD(lParam);
+
 		isMouseLButtonPressed = 0;
 
 		// WM_PAINT 메시지를 유발하여 네모를 화면에 그립니다.
@@ -67,69 +71,64 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	//강의에 안나왔지만 마우스가 움직일때의 이벤트를 뜻합니다.
 	case WM_MOUSEMOVE:
 	{
-
 		// 마우스 이동 중
 		if (isMouseLButtonPressed)
 		{
 			endPoint.x = LOWORD(lParam);
 			endPoint.y = HIWORD(lParam);
 
-			beforeEndPoint.x = LOWORD(lParam);
-			beforeEndPoint.y = HIWORD(lParam);
-
-			// WM_PAINT 메시지를 유발하여 네모를 화면에 그립니다.
 			InvalidateRect(hwnd, NULL, TRUE);
 		}
-		if (isMouseRButtonPressed) {
-			if (isMouseRButtonPressed && rStartPoint.y <= rect.bottom && rStartPoint.y >= rect.top && rStartPoint.x >= rect.left && rStartPoint.x <= rect.right) {
-				rEndPoint.x = LOWORD(lParam);
-				rEndPoint.y = HIWORD(lParam);
 
-				rectSave.top = startPoint.y + (rEndPoint.y - rStartPoint.y);
-				rectSave.bottom = endPoint.y + (rEndPoint.y - rStartPoint.y);
+		if (isMouseRButtonPressed)
+		{
+			rEndPoint.x = LOWORD(lParam);
+			rEndPoint.y = HIWORD(lParam);
 
-				rectSave.right = startPoint.x + (rEndPoint.x - rStartPoint.x);
-				rectSave.left = endPoint.x + (rEndPoint.x - rStartPoint.x);
+			moveDistance.x = rEndPoint.x - rStartPoint.x;
+			moveDistance.y = rEndPoint.y - rStartPoint.y;
 
-				// WM_PAINT 메시지를 유발하여 네모를 화면에 그립니다.
-				InvalidateRect(hwnd, NULL, TRUE);
-			}
+			startPoint.x = beforeStartPoint.x + moveDistance.x;
+			startPoint.y = beforeStartPoint.y + moveDistance.y;
+			endPoint.x = beforeEndPoint.x + moveDistance.x;
+			endPoint.y = beforeEndPoint.y + moveDistance.y;
+
+			InvalidateRect(hwnd, NULL, TRUE);
 		}
 	}
 	break;
 
 	case WM_RBUTTONDOWN:
-		isMouseRButtonPressed = 1;
-
 		rStartPoint.x = LOWORD(lParam);
 		rStartPoint.y = HIWORD(lParam);
-		beforeStartPoint = startPoint;
-		beforeEndPoint = endPoint;
 
-	break;
+		if (rStartPoint.y <= rect.bottom && rStartPoint.y >= rect.top && rStartPoint.x >= rect.left && rStartPoint.x <= rect.right) {
+			isMouseRButtonPressed = 1;
+
+
+		}
+	
+
+		break;
 
 	case WM_RBUTTONUP:
 		isMouseRButtonPressed = 0;
-	break;
+		break;
 
 	case WM_PAINT:
 	{
 		HDC hdc = GetDC(hwnd);
 
-		if (isMouseLButtonPressed)
+		if (isMouseLButtonPressed || isMouseRButtonPressed)
 		{
-			GetClientRect(hwnd, &rect);
-			FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 1));
+			FillRect(hdc, &rect, hBrush_eraser);
 			rect = { startPoint.x, startPoint.y, endPoint.x, endPoint.y }; // 사각형 그리는데 시작지점과 끝점 (startPoint.x와 y, endPoint.x, y ) 기준으로 그리기
-				
 
 			//// 그리기
-			FillRect(hdc, &rect, hBrush);	
+			FillRect(hdc, &rect, hBrush);
 		}
+		
 
-		if (isMouseRButtonPressed) {
-			FillRect(hdc, &rectSave, hBrush);
-		}
 
 		ReleaseDC(hwnd, hdc);
 
@@ -139,7 +138,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 	default:
-		return DefWindowProc(hwnd, uMsg, wParam, lParam);		
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 
 	return S_OK;
