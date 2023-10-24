@@ -113,23 +113,23 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	hButton1 = CreateWindow(
 		L"BUTTON", L"1 Box", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		160 + 16, 64, 160, 64, hWnd, (HMENU)1, hInstance, NULL); //plus 값 margin 설정
+		100 + 16, 64, 100 - 16, 64, hWnd, (HMENU)1, hInstance, NULL); //plus 값 margin 설정
 		
 	hButton2 = CreateWindow(
 		L"BUTTON", L"2 Box", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		320 + 16, 64, 160, 64, hWnd, (HMENU)2, hInstance, NULL);
+		200 + 16, 64, 100 - 16, 64, hWnd, (HMENU)2, hInstance, NULL);
 
 	hButton3 = CreateWindow(
 		L"BUTTON", L"3 Box", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		480 + 16, 64, 160, 64, hWnd, (HMENU)3, hInstance, NULL);
+		300 + 16, 64, 100 - 16, 64, hWnd, (HMENU)3, hInstance, NULL);
 
 	hButton4 = CreateWindow(
 		L"BUTTON", L"4 Box", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		640 + 16, 64, 160, 64, hWnd, (HMENU)4, hInstance, NULL);
+		400 + 16, 64, 100 - 16, 64, hWnd, (HMENU)4, hInstance, NULL);
 
 	hButton5 = CreateWindow(
 		L"BUTTON", L"5 Box", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		800 + 16, 64, 160, 64, hWnd, (HMENU)5, hInstance, NULL);
+		500 + 16, 64, 100 - 16, 64, hWnd, (HMENU)5, hInstance, NULL);
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
