@@ -6,18 +6,15 @@
 
 #include <windows.h>
 
-POINT startPoint = { 0 };
-POINT endPoint = { 0 };
 int isKeyPressed = 0;
 
-RECT rect = { 50 + 8, 50 + 8, 150 - 8, 150 - 8 }; // 왼쪽 상단 좌표 (50, 50)에서 오른쪽 하단 좌표 (150, 150)까지의 사각형
+RECT rect;
 
 HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(255, 240, 200));
 
 bool isBoxVisible = false;
 
 void DrawBox(HWND hWnd, HDC hdc) {
-	RECT rect;
 	GetClientRect(hWnd, &rect);
 
 	if (isBoxVisible) {
@@ -34,13 +31,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc = GetDC(hwnd);
 
-	HBRUSH hBrush_user = CreateSolidBrush(RGB(0, 0, 255));
-	HBRUSH hBrush_eraser = CreateSolidBrush(RGB(255, 0, 0));
-
-
-
-	const wchar_t* text = L"Crash!!!";
-
 	switch (uMsg)
 	{
 	case WM_GETMINMAXINFO: // 창 크기 고정
@@ -55,7 +45,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT: 
 	{
-		FillRect(hdc, &rect, hBackgroundBrush);
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
 		DrawBox(hwnd, hdc);
@@ -74,8 +63,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 
-	DeleteObject(hBrush_user);
-	DeleteObject(hBrush_eraser);
 	ReleaseDC(hwnd, hdc);
 
 	return S_OK;
@@ -104,7 +91,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	}
 
 	hWnd = CreateWindow(
-		L"ButtonWindowClass", L"Win32 Button Example", WS_OVERLAPPEDWINDOW,
+		L"ButtonWindowClass", L"202207016 임완희", WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
 	if (!hWnd) {
@@ -113,7 +100,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 	hButton1 = CreateWindow(
 		L"BUTTON", L"1 Box", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		100 + 16, 64, 100 - 16, 64, hWnd, (HMENU)1, hInstance, NULL); //plus 값 margin 설정
+		100 + 16, 64, 100 - 16, 64, hWnd, (HMENU)1, hInstance, NULL); //+16과 -16으로 margin 설정
 		
 	hButton2 = CreateWindow(
 		L"BUTTON", L"2 Box", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
