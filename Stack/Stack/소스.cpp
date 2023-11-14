@@ -10,5 +10,5 @@ int main() {
 
 	cout << stack.pop() << endl;
 
-	
+	//https://www.techiedelight.com/ko/stack-implementation-in-cpp/
 }
