@@ -7,6 +7,13 @@
 #include <windows.h>
 #include "yuhanCG.h"
 
+/*
+문제 1 : 원 크기 조절시 깜빡거림 심함 (작동은 정상적으로 작동 됨)
+문제 2 : InvalidateRect(hwnd, NULL, TRUE); 가 불려질때 버튼 깜빡임
+문제 3 : 큐브 미구현
+문제 4 : 처음에 그린 원 크기 안에서만 크기 조절이 가능한 문제
+*/
+
 POINT startPoint = { 0 }; //왼클릭 사각형 그릴때 쓸 변수
 POINT endPoint = { 0 };  //왼클릭 사각형 그릴때 쓸 변수
 
@@ -32,7 +39,7 @@ HBRUSH hRectBrush = CreateSolidBrush(RGB(255, 0, 255)); // 핑크 브러시 생성
 POINT mouseLocation = { 0 }; // 마우스 위치를 받을 변수
 
 int isBoxButtonPressed = 0;     //박스 버튼 눌렀는지 확인 할 변수
-int isCicleButtonPressed = 0;   // 원 버튼              ""
+int isCircleButtonPressed = 0;   // 원 버튼              ""
 int isBonobonoButtonPressed = 0;// 보노보노 버튼        ""
 int isRyanButtonPressed = 0;    // 라이언 버튼          ""
 int isCubeButtonPressed = 0;    // 큐브 버튼            ""
@@ -57,6 +64,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     rect.right = clientRect.right - 8;
     rect.bottom = clientRect.bottom - 8;
 
+    POINT finishStartPoint, finishEndPoint; // 사각형 및 원을 오른쪽 아래에서 시작했을 경우 좌표 값이 start 포인트 좌표가 end 좌표보다 더 크기에 비교를 위해 마지막 변수
+    finishStartPoint.x = min(startPoint.x, endPoint.x); // 시작 지점과 끝 지점을 min, max 함수로 비교해서 변수에 저장 (사각형 및 원을 오른쪽 아래에서 부터 그릴때 위한 것)
+    finishStartPoint.y = min(startPoint.y, endPoint.y);
+    finishEndPoint.x = max(startPoint.x, endPoint.x); // 시작 지점과 끝 지점을 max 함수로 비교해서 더 큰 것을 변수에 저장
+    finishEndPoint.y = max(startPoint.y, endPoint.y);
+
     switch (uMsg)
     {
 
@@ -64,7 +77,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         switch (LOWORD(wParam)) {
         case 1:
             isBoxButtonPressed = 1; //박스 버튼 누름 표시
-            isCicleButtonPressed = 0; //다른 버튼들은 false로 바꿈
+            isCircleButtonPressed = 0; //다른 버튼들은 false로 바꿈
             isBonobonoButtonPressed = 0;
             isRyanButtonPressed = 0;
             isCubeButtonPressed = 0;
@@ -73,7 +86,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case 2:
             isBoxButtonPressed = 0; //다른 버튼들은 false로 바꿈
-            isCicleButtonPressed = 1;  //원 버튼을 누름 표시
+            isCircleButtonPressed = 1;  //원 버튼을 누름 표시
             isBonobonoButtonPressed = 0;
             isRyanButtonPressed = 0;
             isCubeButtonPressed = 0;
@@ -82,7 +95,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case 3:
             isBoxButtonPressed = 0; //다른 버튼들은 false로 바꿈
-            isCicleButtonPressed = 0;
+            isCircleButtonPressed = 0;
             isBonobonoButtonPressed = 1; //보노보노 버튼을 누름 표시
             isRyanButtonPressed = 0;
             isCubeButtonPressed = 0;
@@ -92,7 +105,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case 4:
             isBoxButtonPressed = 0;
-            isCicleButtonPressed = 0; //다른 버튼들은 false로 바꿈
+            isCircleButtonPressed = 0; //다른 버튼들은 false로 바꿈
             isBonobonoButtonPressed = 0;
             isRyanButtonPressed = 1; //라이언 버튼을 누름 표시
             isCubeButtonPressed = 0;
@@ -101,14 +114,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case 5:
             isBoxButtonPressed = 0;
-            isCicleButtonPressed = 0; //다른 버튼들은 false로 바꿈
+            isCircleButtonPressed = 0; //다른 버튼들은 false로 바꿈
             isBonobonoButtonPressed = 0;
             isRyanButtonPressed = 0;
             isCubeButtonPressed = 1; //큐브 버튼을 누름 표시
             InvalidateRect(hwnd, NULL, TRUE); //윈도우 핸들을 다시 그리게 하는 문장(드로잉 영역을 초기화 하기 위한 문장)
             break;
-
-
         }
         break;
 
@@ -168,6 +179,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         mouseLocation.x = LOWORD(lParam);// 마우스 좌표를 얻기
         mouseLocation.y = HIWORD(lParam);
 
+        rEndPoint.x = LOWORD(lParam); // 끝 지점 계속 갱신
+        rEndPoint.y = HIWORD(lParam);
+
         if (isMouseLButtonPressed) // 왼클릭 눌렀을 때
         {
             endPoint.x = LOWORD(lParam); // 끝 지점 계속 갱신
@@ -176,11 +190,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             InvalidateRect(hwnd, NULL, TRUE);
         }
 
-        if (isMouseRButtonPressed) //우클릭 눌렀을 때
+        if (isMouseRButtonPressed && isBoxButtonPressed) //우클릭 눌렀을 때
         {
-            rEndPoint.x = LOWORD(lParam); // 끝 지점 계속 갱신
-            rEndPoint.y = HIWORD(lParam);
-
             moveDistance.x = rEndPoint.x - rStartPoint.x; //이동 거리 구하기 x, y좌표 둘다
             moveDistance.y = rEndPoint.y - rStartPoint.y;
 
@@ -191,6 +202,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             InvalidateRect(hwnd, NULL, TRUE);
         }
+        if (isMouseRButtonPressed && isCircleButtonPressed) { //마우스 우클릭과 원 버튼 클릭했을때
+
+            InvalidateRect(hwnd, NULL, TRUE); // 기존에 그린 원을 지우기 위해 있는 것
+            UpdateWindow(hwnd);
+
+            moveDistance.x = rEndPoint.x - rStartPoint.x; //x좌표 이동 거리 구하기  
+
+            if (0 < moveDistance.x) { // 이동 거리가 0 이상이면 (오른쪽으로 갔을 때)
+                finishStartPoint.x = beforeStartPoint.x - moveDistance.x * 2; //기존 원 크기에 x좌표 시작과 끝을 더해서 크기 만들기
+                finishStartPoint.y = beforeStartPoint.y - moveDistance.x * 2;
+                finishEndPoint.x = beforeEndPoint.x + moveDistance.x * 2;
+                finishEndPoint.y = beforeEndPoint.y + moveDistance.x * 2;
+
+                DrawCircle(hdc, finishStartPoint.x, finishStartPoint.y, finishEndPoint.x, finishEndPoint.y);
+            }
+            else {
+
+                finishStartPoint.x = beforeStartPoint.x - moveDistance.x / 2; //기존 원 크기에 x 시작과 끝을 더해서 크기 만들기
+                finishStartPoint.y = beforeStartPoint.y - moveDistance.x / 2;
+                finishEndPoint.x = beforeEndPoint.x + moveDistance.x / 2;
+                finishEndPoint.y = beforeEndPoint.y + moveDistance.x / 2 ;
+
+                DrawCircle(hdc, finishStartPoint.x, finishStartPoint.y, finishEndPoint.x, finishEndPoint.y);
+            }
+        }
         break;
     }
 
@@ -199,7 +235,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         rStartPoint.x = LOWORD(lParam);  // 우클릭 시작 지점 구하기
         rStartPoint.y = HIWORD(lParam);
 
-        if (rStartPoint.y <= boxRect.bottom && rStartPoint.y >= boxRect.top && rStartPoint.x >= boxRect.left && rStartPoint.x <= boxRect.right) { // 마우스가 사각형 범위 안에 들어가 있으면 
+        if ((rStartPoint.y <= boxRect.bottom && rStartPoint.y >= boxRect.top && rStartPoint.x >= boxRect.left && rStartPoint.x <= boxRect.right) || // 마우스가 사각형 범위 안에 들어가 있거나(Box 버튼 사용시 용도) 
+            (rStartPoint.x >= finishStartPoint.x && rStartPoint.y >= finishStartPoint.y && rStartPoint.x <= finishEndPoint.x && rStartPoint.y <= finishEndPoint.y)) {
             isMouseRButtonPressed = 1; // 우클릭 활성화
 
         } // 이 문장으로 인해 사각형 이동이 사각형 범위 안에 있을때만 가능
@@ -223,7 +260,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_PAINT:
     {
-        POINT finishStartPoint, finishEndPoint; // 사각형을 오른쪽 아래에서 시작했을 경우 좌표 값이 start 포인트 좌표가 end 좌표보다 더 크기에 비교를 위해 마지막 변수
+
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
@@ -232,11 +269,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         if ((isMouseLButtonPressed || isMouseRButtonPressed) && (startPoint.x >= rect.left && endPoint.x <= rect.right && startPoint.y >= rect.top && endPoint.y <= rect.bottom) && isBoxButtonPressed == 1) //사각형 그릴 때 마우스 왼쪽 또는 오른쪽 눌르고 드로잉 영역 안에 있고 박스 버튼을 눌렀으면 
         {
-            finishStartPoint.x = min(startPoint.x, endPoint.x); // 시작 지점과 끝 지점을 min, max 함수로 비교해서 변수에 저장 (사각형을 오른쪽 아래에서 부터 그릴때 위한 것)
-            finishStartPoint.y = min(startPoint.y, endPoint.y);
-            finishEndPoint.x = max(startPoint.x, endPoint.x); // 시작 지점과 끝 지점을 max 함수로 비교해서 더 큰 것을 변수에 저장
-            finishEndPoint.y = max(startPoint.y, endPoint.y);
-
             FillRect(hdc, &boxRect, hBackgroundBrush);
             boxRect = { finishStartPoint.x, finishStartPoint.y, finishEndPoint.x, finishEndPoint.y };
 
@@ -245,7 +277,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         if (isMouseLButtonPressed && (startPoint.x >= rect.left && endPoint.x <= rect.right && startPoint.y >= rect.top && endPoint.y <= rect.bottom) && isRyanButtonPressed) { //라이언을 그릴 때 마우스 왼쪽을 눌르고 드로잉 영역 안에 있고 박스 버튼을 눌렀으면
-            DrawRyan(hwnd, hdc, startPoint.x, startPoint.y, endPoint.x, endPoint.y); //라이언을 그려라
+            DrawRyan(hdc, finishStartPoint.x, finishStartPoint.y, finishEndPoint.x, finishEndPoint.y); //라이언을 그려라
+        }
+
+        if (isMouseLButtonPressed && (startPoint.x >= rect.left && endPoint.x <= rect.right && startPoint.y >= rect.top && endPoint.y <= rect.bottom) && isCircleButtonPressed) { //원을을 그릴 때 마우스 왼쪽을 눌르고 드로잉 영역 안에 있고 박스 버튼을 눌렀으면
+            DrawCircle(hdc, finishStartPoint.x, finishStartPoint.y, finishEndPoint.x, finishEndPoint.y); //원을 그려라
         }
 
         if (isBonobonoButtonPressed == 1) { // 보노보노 버튼을 눌렀다면
@@ -265,8 +301,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
-
-    ReleaseDC(hwnd, hdc);
 
     return S_OK;
 }
