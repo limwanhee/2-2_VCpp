@@ -8,7 +8,7 @@
 #include "yuhanCG.h"
 
 /*
-문제 1 : 원 크기 조절시 깜빡거림 심함 (작동은 정상적으로 작동 됨)
+문제 1 : 원 크기 조절시 깜빡거림 심함 (작동은 정상적으로 작동은 됩니다!)
 문제 2 : InvalidateRect(hwnd, NULL, TRUE); 가 불려질때 버튼 깜빡임
 문제 3 : 큐브 미구현
 문제 4 : 처음에 그린 원 크기 안에서만 크기 조절이 가능한 문제
@@ -190,7 +190,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             InvalidateRect(hwnd, NULL, TRUE);
         }
 
-        if (isMouseRButtonPressed && isBoxButtonPressed) //우클릭 눌렀을 때
+        if (isMouseRButtonPressed && isBoxButtonPressed) //우클릭과 박스 버튼을 눌렀을 때
         {
             moveDistance.x = rEndPoint.x - rStartPoint.x; //이동 거리 구하기 x, y좌표 둘다
             moveDistance.y = rEndPoint.y - rStartPoint.y;
@@ -204,7 +204,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         if (isMouseRButtonPressed && isCircleButtonPressed) { //마우스 우클릭과 원 버튼 클릭했을때
 
-            InvalidateRect(hwnd, NULL, TRUE); // 기존에 그린 원을 지우기 위해 있는 것
+            InvalidateRect(hwnd, NULL, TRUE); // 기존에 그린 원을 지우기 위해 있는 것(이거 때문에 원 크기 조절할때 깜빡임이 심합니다 기능 구현을 우선으로 했습니다)
             UpdateWindow(hwnd);
 
             moveDistance.x = rEndPoint.x - rStartPoint.x; //x좌표 이동 거리 구하기  
@@ -217,7 +217,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 DrawCircle(hdc, finishStartPoint.x, finishStartPoint.y, finishEndPoint.x, finishEndPoint.y);
             }
-            else {
+            else { // 이동 거리가 0 이하면 (왼쪽으로 갔을 때)
 
                 finishStartPoint.x = beforeStartPoint.x - moveDistance.x / 2; //기존 원 크기에 x 시작과 끝을 더해서 크기 만들기
                 finishStartPoint.y = beforeStartPoint.y - moveDistance.x / 2;
@@ -265,7 +265,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HDC hdc = BeginPaint(hwnd, &ps);
 
         FrameRect(hdc, &clientRect, BoxBrush);  // View에 Box 그리기
-        FrameRect(hdc, &rect, DrawingBrush); //드로잉 영역 그리기
+        FillRect(hdc, &rect, DrawingBrush); //드로잉 영역 그리기
 
         if ((isMouseLButtonPressed || isMouseRButtonPressed) && (startPoint.x >= rect.left && endPoint.x <= rect.right && startPoint.y >= rect.top && endPoint.y <= rect.bottom) && isBoxButtonPressed == 1) //사각형 그릴 때 마우스 왼쪽 또는 오른쪽 눌르고 드로잉 영역 안에 있고 박스 버튼을 눌렀으면 
         {
